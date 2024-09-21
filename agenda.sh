@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 EDITOR="nano"
-PFILES="pFiles"
-PWD=$( cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd -P )/$PFILES
+PFILES=".agenda"
+ARCHIVO=$HOME/$PFILES
+#PWD=$( cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd -P )/$PFILES
 
 AYUDA="AGENDA\n La presente herramienta consta de generación y control de
-plantillas de registros.\n Para 'instalar' ejecute el script 'instalar.sh' y
-siga las instrucciones.\n Los registros son creados con campos por defecto (ID,
+plantillas de registros.\n Los registros son creados con campos por defecto (ID,
 PROJECT, TITLE, STATUS, ASSIGNEE, CREATION_DATE, DUE_DATE, SUMMARY)\npero
 pueden añadirse o cambiarse detalles en con cualquier editor
-de texto.\n Los registros se encuentran en el directorio $PFILES.\n\n
+de texto.\n Los registros se encuentran en el directorio $ARCHIVO.\n\n
 -a\tInicia la creación de un nuevo registro.\n
 -o\tLista los registros con estado abierto (STATUS open).\n
 -n\tInserta un comentario a un registro existente.\n
@@ -32,15 +32,15 @@ getLabel(){
 
 issueID2Path(){
 	read -r -p "# Ingrese el ID del registro: " ID
-	grep -r "ID $ID" $PWD | cut -d ":" -f 1
+	grep -r "ID $ID" $ARCHIVO | cut -d ":" -f 1
 }
 
 # -n
 addNote(){
-	echo "### Comentar un registro:"	
+	echo "### Comentar un registro:"
 	listIssues
 	NOTA=$(issueID2Path)
-	
+
 	while
 		echo -e "# Ingrese una nota de hasta 75 caracteres:"
 		read -r -p "> " INPUT
@@ -64,16 +64,16 @@ newIssue(){
 	echo "### Nuevo registro"
 	while
 		read -r -p "# TITULO NUEVO: " TITLE
-		[ -f $PWD/$TITLE ]
+		[ -f $ARCHIVO/$TITLE ]
 	do true; done
-	ID=$(getLabel ID $PWD -r | awk 'BEGIN{a=   0}{if ($1>0+a) a=$1} END{print (a+1)}')
+	ID=$(getLabel ID $ARCHIVO -r | awk 'BEGIN{a=   0}{if ($1>0+a) a=$1} END{print (a+1)}')
 	echo -e "# Ingrese los valores solicitados:"
-	LP=($(getLabel PROJ $PWD -r | uniq))
+	LP=($(getLabel PROJ $ARCHIVO -r | uniq))
 	echo -e $"> Proyectos existentes:\n${LP[@]}"
 	read -r -p "> PORYECTO: " PROJECT
 	read -r -p "> STATUS: " STATUS
 	read -r -p "> RESPONSABLE: " ASSIGNEE
-	cat > $PWD/$TITLE << EOF
+	cat > $ARCHIVO/$TITLE << EOF
 ID $ID
 PROJECT $PROJECT
 TITLE $TITLE
@@ -92,19 +92,19 @@ removeIssue(){
 	read -r -p "> " LISTAR
 	[ ! -z $LISTAR ] && listIssues
         read -r -p "Ingrese el ID del registro a eliminar: " ID
-	$( grep -r "ID $ID" $PWD | cut -d ":" -f 1 | xargs rm ) || echo -e "# No se pudo eliminar el registro."
+	$( grep -r "ID $ID" $ARCHIVO | cut -d ":" -f 1 | xargs rm ) || echo -e "# No se pudo eliminar el registro."
 }
 
 # -o -b
 listIssueX(){
-	FILES=$(grep -r $1 $PWD | grep -i $2 | cut -d ":" -f 1 | awk -F "/" '{print $NF}')
+	FILES=$(grep -r $1 $ARCHIVO | grep -i $2 | cut -d ":" -f 1 | awk -F "/" '{print $NF}')
 	echo -e $"\n### Issues - $1: $2"
 	for ITEM in ${FILES[@]}
 	do
-		H0=$(getLabel ID $PWD/$ITEM)
-		H1=$(getLabel TITLE $PWD/$ITEM)
-		H2=$(getLabel PROJECT $PWD/$ITEM)
-		H3=$(getLabel ASSIGNEE $PWD/$ITEM)
+		H0=$(getLabel ID $ARCHIVO/$ITEM)
+		H1=$(getLabel TITLE $ARCHIVO/$ITEM)
+		H2=$(getLabel PROJECT $ARCHIVO/$ITEM)
+		H3=$(getLabel ASSIGNEE $ARCHIVO/$ITEM)
 		echo -e ">  ID: $H0\tTítulo: $H1\t Proyecto: $H2\tResponsable: $H3"
 	done
 }
@@ -112,18 +112,18 @@ listIssueX(){
 # -p
 listProjects(){
 	echo -e "\n### Proyectos:"
-	getLabel PROJ $PWD -r | uniq
+	getLabel PROJ $ARCHIVO -r | uniq
 }
 
 # -l
 listIssues(){
-	FILES=$(ls $PWD)
+	FILES=$(ls $ARCHIVO)
 	for REG in ${FILES[@]}
 	do
-		H0=$(getLabel ID $PWD/$REG)
-		H1=$(getLabel PROJECT $PWD/$REG)
-		H2=$(getLabel TITLE $PWD/$REG)
-		H3=$(getLabel STATUS $PWD/$REG)
+		H0=$(getLabel ID $ARCHIVO/$REG)
+		H1=$(getLabel PROJECT $ARCHIVO/$REG)
+		H2=$(getLabel TITLE $ARCHIVO/$REG)
+		H3=$(getLabel STATUS $ARCHIVO/$REG)
 		echo -e ">  ID: $H0\tProyecto: $H1\tIssue: $H2\tSTATUS: $H3"
 	done
 }
@@ -137,10 +137,10 @@ manualEditor(){
 
 #MAIN
 case $1 in
-	-a | anotar | agendar)
+	-a | anotar | agendar | add)
 		newIssue
 		;;
-	-n | comentario | comentar)
+	-n | comentario | comentar | comment)
 		addNote
 		;;
 	-c | notas)
@@ -155,13 +155,13 @@ case $1 in
         -b | blocked | block)
                 listIssueX STATUS blocked
                 ;;
-        -p | proyecto)
-                listProjects 
+        -p | proyecto | project)
+                listProjects
                 ;;
-	-l | lista)
+	-l | lista | list)
 		listIssues
 		;;
-	-m | editor)
+	-m | editor | modify)
 		manualEditor
 		;;
 	*)
