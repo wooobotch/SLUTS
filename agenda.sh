@@ -12,8 +12,8 @@ pueden añadirse o cambiarse detalles en con cualquier editor
 de texto.\n Los registros se encuentran en el directorio $ARCHIVO.\n\n
 -a\tInicia la creación de un nuevo registro.\n
 -o\tLista los registros con estado abierto (STATUS open).\n
--n\tInserta un comentario a un registro existente.\n
--c\tLista los comentarios o notas en un registro dado.\n
+-c\tInserta un comentario a un registro existente.\n
+-n\tLista los comentarios o notas en un registro dado.\n
 -r\tElimina un registro existente.\n
 -b\tLista los registros con estado bloqueado (STATUS blocked).\n
 -p\tLista los nombres proyectos a asociados a los registros existentes(campo PROJECT).\n
@@ -35,8 +35,8 @@ issueID2Path(){
 	grep -r "ID $ID" $ARCHIVO | cut -d ":" -f 1
 }
 
-# -n
-addNote(){
+# -c
+addComment(){
 	echo "### Comentar un registro:"
 	listIssues
 	NOTA=$(issueID2Path)
@@ -48,10 +48,10 @@ addNote(){
 	do true; done
 
 	echo -e "NOTE $INPUT" >> $NOTA
-	echo -e "# Registro ID:$ID actualizado.\n"
+	echo -e "# Registro ID:$(grep ID $NOTA | cut -d " " -f 2) actualizado.\n"
 }
 
-# -c
+# -n
 printNotes(){
 	listIssues
 	REG=$(issueID2Path)
@@ -140,10 +140,10 @@ case $1 in
 	-a | anotar | agendar | add)
 		newIssue
 		;;
-	-n | comentario | comentar | comment)
-		addNote
+	-c | comentario | comentar | comment)
+		addComment
 		;;
-	-c | notas)
+	-n | notas)
 		printNotes
 		;;
 	-r | remove | borrar)
