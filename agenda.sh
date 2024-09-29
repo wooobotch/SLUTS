@@ -161,7 +161,7 @@ case $1 in
 	-l | lista | list)
 		listIssues
 		;;
-	-m | editor | modify)
+	-m | editor | modify | modificar)
 		manualEditor
 		;;
 	*)
