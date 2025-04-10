@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+LINES=$(find $1 -type f -exec cat {} + | wc -l)
+
+echo $LINES
