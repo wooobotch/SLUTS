@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+AYUDA="\n CLIPPY - Video Clip Making Script\n ---------------------------------\n
+Basic video clip production without GUI.\n
+It is required to pass a project file containing some data in order to
+produce an output. You can pipe it into a file from this message.\n
+Sample project file:\
+# Expected files
+\n VIDEO="path/to/baseVideo.mp4"\n
+BG="path/to/longEnoughAudio.mp3"\n
+FX="path/to/shortSoundEffect.opus"\n
+# Variables
+\n INICIO="seconds-startMark"\n
+FIN="seconds-endMark"\n
+DELAY_FX="seconds-effectMark"\n
+SALIDA="path/to/outputFile.mp4"\n
+"
+
+VARIABLES=("VIDEO" "BG" "FX" "INICIO" "FIN" "DELAY_FX" "SALIDA")
+declare -A FFMPEG_PARAMS
+
+extract(){
+  grep $1 $2 | head -n 1 | cut -d "=" -f 2 | tr -d "'\""
+}
+
+loadVars(){
+  for VARS in "${VARIABLES[@]}"; do
+    FFMPEG_PARAMS[$VARS]=$(extract $VARS $1)
+  done
+}
+
+process(){
+  ffmpeg \
+    -ss ${FFMPEG_PARAMS[$INICIO]} -to ${FFMPEG_PARAMS[$FIN]} -i "${FFMPEG_PARAMS[$VIDEO]}" \
+    -i "${FFMPEG_PARAMS[$BG]}" \
+    -i "${FFMPEG_PARAMS[$FX]}" \
+    -filter_complex "\
+      [1:a]volume=0.3[a1]; \
+      [2:a]adelay=${FFMPEG_PARAMS[DELAY_FX]}|${FFMPEG_PARAMS[DELAY_FX]}[a2]; \
+      [0:a][a1][a2]amix=inputs=3:duration=first:dropout_transition=2[audio]; \
+    -map "[v]" -map "[audio]" \
+    -c:v libx264 -c:a aac -shortest "${FFMPEG_PARAMS[$SALIDA]}"
+}
+
+main(){
+  [ -f $1 ] && echo "existe"
+  loadVars $1 || exit 1
+  process
+}
+
+[ $# -eq 0 ] && echo -e $AYUDA
+
+main $1
