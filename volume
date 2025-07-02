@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+tune() {
+
+  case $1 in
+      up)
+          amixer sset Master 5%+
+          ;;
+      down)
+          amixer sset Master 5%-
+          ;;
+      *)
+          amixer sset Master 25%
+          ;;
+  esac
+}
+
+
+tune $1
