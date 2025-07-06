@@ -1,8 +1,13 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 tune() {
 
   case $1 in
+      sil)
+          [[ $(amixer get Master | grep "Mono:" ) =~ .*"[on]"*. ]] && \
+          amixer sset Master mute || amixer sset Master unmute
+          ;;
+
       up)
           amixer sset Master 5%+
           ;;
@@ -10,7 +15,7 @@ tune() {
           amixer sset Master 5%-
           ;;
       *)
-          amixer sset Master 25%
+          amixer sset Master 30%
           ;;
   esac
 }
